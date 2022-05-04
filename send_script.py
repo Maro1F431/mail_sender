@@ -36,6 +36,9 @@ def on_login(password):
     except:
         st.warning("Could not login, please enter a valid email and password.")
 
+def clear_email_list():
+    st.session_state.emails = st.session_state.emails[0:0]
+
 def send_emails(nb_batch, time_between_email, email_subject, emails_list, always_in_copy, attachments, progress):
     nb_sent = 0
     nb_to_send = st.session_state.emails.shape[0]
@@ -141,6 +144,7 @@ else:
     with col_email_list:
         emails_list = st.empty()
         emails_list.write(st.session_state.emails)
+        st.button("Clear email list", on_click=clear_email_list)
 
     col_html_email, col_preview = st.columns(2)
 
