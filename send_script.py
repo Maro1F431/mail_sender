@@ -3,7 +3,11 @@ import streamlit.components.v1 as components
 import smtplib
 import time
 import pandas as pd
-from email.message import EmailMessage
+import email
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import atexit
 
 padding = 0
@@ -32,7 +36,7 @@ def on_login(password):
     except:
         st.warning("Could not login, please enter a valid email and password.")
 
-def send_emails(nb_batch, time_between_email, email_subject, emails_list, always_in_copy, progress):
+def send_emails(nb_batch, time_between_email, email_subject, emails_list, always_in_copy, attachments, progress):
     nb_sent = 0
     nb_to_send = st.session_state.emails.shape[0]
     if nb_to_send > 0:
@@ -44,15 +48,29 @@ def send_emails(nb_batch, time_between_email, email_subject, emails_list, always
             while(st.session_state.emails.shape[0] > 0 and st.session_state.keep_sending == True):
 
                 #Send emails
-                msg = EmailMessage()
+                msg = MIMEMultipart("alternative")
+
                 msg['Subject'] = email_subject
                 msg['From'] = st.session_state.email_adress
                 To_list = st.session_state.emails['Emails'].tolist()
                 if always_in_copy != '':
                     To_list.append(always_in_copy)
-                print(To_list)
-                msg['To'] = To_list
-                msg.set_content(st.session_state.email_to_send, subtype="html")
+                msg['To'] = ", ".join(To_list)
+                msg.attach(MIMEText(st.session_state.email_to_send, "html"))
+
+                #attachments
+                                #attachments
+                for attachment in attachments:
+                    maintype,_,subtype = attachment.type.partition("/")
+                    part = MIMEBase(maintype, subtype)
+                    part.set_payload(attachment.read())
+                    encoders.encode_base64(part)
+                    part.add_header(
+                        "Content-Disposition",
+                        "attachment", filename= attachment.name
+                    )
+                    msg.attach(part)
+               
                 st.session_state.smtp_client.send_message(msg)
 
                 #update variables
@@ -144,13 +162,17 @@ else:
         nb_email_batch = st.number_input("Enter the number of emails to send each time", 1 , 100, 10, 1)
         email_subject = st.text_input("Email subject")
         always_in_copy = st.text_input("Optional: Email always in copy")
+        
+        #Attachements
+        attachments = st.file_uploader("Upload attachments, if any.", accept_multiple_files=True)
+
         sub_col, stop_col = st.columns(2)
         progress = st.container()
         with sub_col:
             submitted = st.form_submit_button("SEND EMAILS")
             if submitted:
                 st.session_state.keep_sending = True
-                send_emails(nb_email_batch, time_between_email, email_subject, emails_list, always_in_copy, progress)
+                send_emails(nb_email_batch, time_between_email, email_subject, emails_list, always_in_copy, attachments, progress)
         with stop_col:
             stop_bt = st.form_submit_button("CANCEL")
             if stop_bt:
