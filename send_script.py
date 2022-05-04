@@ -59,7 +59,6 @@ def send_emails(nb_batch, time_between_email, email_subject, emails_list, always
                 msg.attach(MIMEText(st.session_state.email_to_send, "html"))
 
                 #attachments
-                                #attachments
                 for attachment in attachments:
                     maintype,_,subtype = attachment.type.partition("/")
                     part = MIMEBase(maintype, subtype)
@@ -85,9 +84,9 @@ def send_emails(nb_batch, time_between_email, email_subject, emails_list, always
 
                 #Progress bar
                 progress_bar.progress( nb_sent / nb_to_send)
-                txt_remaining_time.write("remaining time :" + str(remaining_time))
-                txt_nb_sent.write("number of emails sent: " + str(nb_sent))
-                txt_nb_to_send.write("number of emails to send " + str(nb_to_send))
+                txt_remaining_time.write("Remaining time: " + str(int(remaining_time)) + " minute(s)")
+                txt_nb_sent.write("Number of emails sent: " + str(nb_sent))
+                txt_nb_to_send.write("Number of emails to send: " + str(nb_to_send))
 
                 #Wait for next batch
                 while((nb_sent < nb_to_send) and time_to_sleep > 0 and st.session_state.keep_sending == True):
@@ -128,7 +127,7 @@ else:
 
     with col_form:
         with st.form("Emails", clear_on_submit=True):
-            txt = st.text_area("List of Emails" , height=200, placeholder="One email per line\n" +
+            txt = st.text_area("Email adresses to add" , height=200, placeholder="One email per line\n" +
             "Example:\n"
             + "juan1@gmail.com\n"
             + "juan2@gmail.com\n"
@@ -148,32 +147,32 @@ else:
 
     with col_html_email:
         with st.form("Upload email to send"):
-            email_to_send = st.text_area("Enter HMTL code for Email", height=250)
+            email_to_send = st.text_area("HMTL code for of the sent email", height=250)
             submitted = st.form_submit_button("Upload email")
             if submitted:
                 st.session_state.email_to_send = email_to_send
     with col_preview:
-        st.write("Email preview: ")
+        st.write("Email preview")
         components.html(st.session_state.email_to_send, height=300, scrolling=True)
 
     with st.form("Send emails"):
-        time_between_email = st.number_input("Enter time (in minutes) between emails", 1 , 10, 5, 1)
-        nb_email_batch = st.number_input("Enter the number of emails to send each time", 1 , 100, 10, 1)
+        time_between_email = st.number_input("Time (in minutes) between emails", 1 , 10, 5, 1)
+        nb_email_batch = st.number_input("Number of emails to send each time", 1 , 100, 10, 1)
         email_subject = st.text_input("Email subject")
         always_in_copy = st.text_input("Optional: Email always in copy")
         
         #Attachements
-        attachments = st.file_uploader("Upload attachments, if any.", accept_multiple_files=True)
+        attachments = st.file_uploader("Optional: attachments", accept_multiple_files=True)
 
         sub_col, stop_col = st.columns(2)
         progress = st.container()
         with sub_col:
-            submitted = st.form_submit_button("SEND EMAILS")
+            submitted = st.form_submit_button("Send emails")
             if submitted:
                 st.session_state.keep_sending = True
                 send_emails(nb_email_batch, time_between_email, email_subject, emails_list, always_in_copy, attachments, progress)
         with stop_col:
-            stop_bt = st.form_submit_button("CANCEL")
+            stop_bt = st.form_submit_button("Cancel")
             if stop_bt:
                 st.session_state.keep_sending = False
    
