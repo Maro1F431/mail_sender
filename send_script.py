@@ -81,8 +81,7 @@ def send_emails(nb_batch, time_between_email, email_subject, emails_list, always
                 st.session_state.emails.reset_index(drop=True, inplace=True)
                 emails_list.write(st.session_state.emails)
                 
-                #time_to_sleep = 60 * time_between_email
-                time_to_sleep = time_between_email
+                time_to_sleep = 60 * time_between_email
 
                 #Progress bar
                 progress_bar.progress( nb_sent / nb_to_send)
