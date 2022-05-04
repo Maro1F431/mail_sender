@@ -10,14 +10,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import atexit
 
-padding = 0
-st.markdown(f""" <style>
-    .reportview-container .main .block-container{{
-        padding-top: {padding}rem;
-        padding-right: {padding}rem;
-        padding-left: {padding}rem;
-        padding-bottom: {padding}rem;
-    }} </style> """, unsafe_allow_html=True)
+st.set_page_config(layout="wide")
 
 # Hide hamburger button
 st.markdown(""" <style>
@@ -126,11 +119,23 @@ else:
     if 'email_to_send' not in st.session_state:
         st.session_state.email_to_send = ''
 
+    col_html_email, col_preview = st.columns(2)
+
+    with col_html_email:
+        with st.form("Upload email to send"):
+            email_to_send = st.text_area("HMTL code for of the sent email", height=350)
+            submitted = st.form_submit_button("Upload email")
+            if submitted:
+                st.session_state.email_to_send = email_to_send
+    with col_preview:
+        st.write("Email preview")
+        components.html(st.session_state.email_to_send, height=400, scrolling=True)
+
     col_form, col_email_list = st.columns(2)
 
     with col_form:
         with st.form("Emails", clear_on_submit=True):
-            txt = st.text_area("Email adresses to add" , height=200, placeholder="One email per line\n" +
+            txt = st.text_area("Email adresses to add" , height=300, placeholder="One email per line\n" +
             "Example:\n"
             + "juan1@gmail.com\n"
             + "juan2@gmail.com\n"
@@ -143,21 +148,9 @@ else:
 
     with col_email_list:
         emails_list = st.empty()
-        emails_list.write(st.session_state.emails)
+        emails_list.dataframe(st.session_state.emails, height=300)
         st.button("Clear email list", on_click=clear_email_list)
 
-    col_html_email, col_preview = st.columns(2)
-
-
-    with col_html_email:
-        with st.form("Upload email to send"):
-            email_to_send = st.text_area("HMTL code for of the sent email", height=250)
-            submitted = st.form_submit_button("Upload email")
-            if submitted:
-                st.session_state.email_to_send = email_to_send
-    with col_preview:
-        st.write("Email preview")
-        components.html(st.session_state.email_to_send, height=300, scrolling=True)
 
     with st.form("Send emails"):
         time_between_email = st.number_input("Time (in minutes) between emails", 1 , 10, 5, 1)
