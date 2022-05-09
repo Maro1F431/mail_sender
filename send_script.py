@@ -1,3 +1,4 @@
+from traceback import print_tb
 import streamlit as st
 import streamlit.components.v1 as components
 import smtplib
@@ -48,7 +49,8 @@ def send_emails(nb_batch, time_between_email, email_subject, emails_list, always
 
                 msg['Subject'] = email_subject
                 msg['From'] = st.session_state.email_adress
-                To_list = st.session_state.emails['Emails'].tolist()
+                To_list = st.session_state.emails['Emails'].head(nb_batch).tolist()
+                print(To_list)
                 if always_in_copy != '':
                     To_list.append(always_in_copy)
                 msg['To'] = ", ".join(To_list)
@@ -70,19 +72,22 @@ def send_emails(nb_batch, time_between_email, email_subject, emails_list, always
 
                 #update variables
                 nb_remaining_email = st.session_state.emails.shape[0]
-                nb_sent += nb_batch if nb_remaining_email > nb_batch else nb_remaining_email
+                nb_sent += nb_batch if nb_remaining_email >= nb_batch else nb_remaining_email
                 remaining_time = ((nb_to_send - nb_sent) / nb_batch) * time_between_email
+
                 st.session_state.emails = st.session_state.emails.tail(-nb_batch)
                 st.session_state.emails.reset_index(drop=True, inplace=True)
                 emails_list.write(st.session_state.emails)
+
                 
                 time_to_sleep = 60 * time_between_email
 
                 #Progress bar
                 progress_bar.progress( nb_sent / nb_to_send)
-                txt_remaining_time.write("Remaining time: " + str(int(remaining_time)) + " minute(s)")
+                txt_remaining_time.write("Remaining time: " + str(remaining_time) + " minute(s)")
                 txt_nb_sent.write("Number of emails sent: " + str(nb_sent))
                 txt_nb_to_send.write("Number of emails to send: " + str(nb_to_send))
+                print(nb_sent)
 
                 #Wait for next batch
                 while((nb_sent < nb_to_send) and time_to_sleep > 0 and st.session_state.keep_sending == True):
